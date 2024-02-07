@@ -101,14 +101,6 @@ jobs:
 
         npm install
         npm run build
-    - name: Start a server and run tests (ubuntu, macos)
-      if: matrix.os != 'windows-latest'
-      run: |
-        cd tests
-        source venv/bin/activate
-        streamlit run streamlit_test.py --server.port 8555 &
-        bash check_server.sh
-        npm run test:streamlit -- --project="${{ matrix.project }}"
 
     - name: Checkout
       uses: actions/checkout@v4
@@ -128,31 +120,17 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Base Setup
-      uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-
-    - name: Build
-      uses: ./.github/actions/build-dist
-
     - uses: actions/download-artifact@v4
       with:
-        name: notebook-dist-${{ github.run_number }}
-        path: ./dist
-
-    - name: Install the package
-      run: |
-        cd dist
-        python -m pip install -vv notebook*.whl
-
-        # disable git hooks
-        git config core.hooksPath no-hooks
+        name: dist-${{ github.run_number }}
+        path: ./tests/streamlit_ui_tests/streamlit.spec.ts-snapshots
 
     - name: Update snapshots
       uses: jupyterlab/maintainer-tools/.github/actions/update-snapshots@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        npm_client: jlpm
-        test_folder: ui-tests
+        npm_client: npm
+        test_folder: tests
         start_server_script: 'null'
         update_script: test:update --browser ${{ matrix.browser }}
       env:
