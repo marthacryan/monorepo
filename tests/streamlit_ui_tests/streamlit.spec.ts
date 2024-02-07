@@ -257,10 +257,266 @@ test.describe('Home Tab Buttons', () => {
     
     await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
 
-    await expect(mito.getByText('Setup Graph')).toBeVisible();
+    await expect(mito.locator('#mito-center-content-container').getByText('Select Data')).toBeVisible();
     await mito.getByTitle('Select columns to graph on the X axis.').getByText('+ Add').click();
     await mito.locator('.mito-dropdown-item').first().click();
     await expect(mito.locator('.plotly-graph-div').first()).toBeVisible();
+  });
+
+  test('Graph from selection', async ({ page }) => {
+    const mito = await getMitoFrameWithTestCSV(page);
+    
+    await mito.getByTitle('Column1').click();
+    await mito.getByTitle('Column2').click({ modifiers: ['Shift']});
+    
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+
+    await expect(mito.locator('p.select-text').getByText('Column1')).toBeVisible();
+    await expect(mito.locator('p.select-text').getByText('Column2')).toBeVisible();
+  })
+
+  test('Graph from selection with columns selected in reverse order', async ({ page }) => {
+    const mito = await getMitoFrameWithTestCSV(page);
+    
+    await mito.getByTitle('Column2').click();
+    await mito.getByTitle('Column1').click({ modifiers: ['Shift']});
+    
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+
+    await expect(mito.locator('.graph-sidebar-toolbar-content .select-container').nth(1)).toHaveText('Column1');
+    await expect(mito.locator('.graph-sidebar-toolbar-content .select-container').nth(2)).toHaveText('Column2');
+  })
+
+  test('Change Chart type to Linear', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('Column1 bar chart')).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Change Chart Type' }).click();
+    await mito.getByText('Line').hover();
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Linear' })
+
+    await expect(mito.getByText('Column1 line')).toBeVisible();
+    await expect(mito.locator('.plotly-graph-div')).toHaveScreenshot('linear-line-graph.png');
+  });
+
+  test('Change Chart type to Horizontal Line Graph', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('Column1 bar chart')).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Change Chart Type' }).click();
+    await mito.getByText('Line').hover();
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Horizontal' })
+
+    await expect(mito.getByText('Column1 line')).toBeVisible();
+    // Make sure that the snapshot of the graph is the same
+    await expect(mito.locator('.plotly-graph-div')).toHaveScreenshot('horizontal-line-graph.png');
+  });
+
+  test('Change Chart type to vertical grouped bar Graph', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('Column1 bar chart')).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Change Chart Type' }).click();
+    await mito.getByRole('button', { name: 'Bar' }).hover();
+    await mito.getByRole('button', { name: 'Grouped' }).first().click();
+    await awaitResponse(page);
+
+    await expect(mito.getByText('Column1 bar')).toBeVisible();
+    // Make sure that the snapshot of the graph is the same
+    await expect(mito.locator('.plotly-graph-div')).toHaveScreenshot('vertical-grouped-bar-graph.png');
+  });
+
+
+  test('Change Chart type to horizontal grouped bar Graph', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('Column1 bar chart')).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Change Chart Type' }).click();
+    await mito.getByRole('button', { name: 'Bar' }).hover();
+    await mito.getByRole('button', { name: 'Grouped' }).nth(1).click();
+    await awaitResponse(page);
+
+    await expect(mito.getByText('Column1 bar')).toBeVisible();
+    // Make sure that the snapshot of the graph is the same
+    await expect(mito.locator('.plotly-graph-div')).toHaveScreenshot('horizontal-grouped-bar-graph.png');
+  });
+
+  test.only('Change Chart type to scatter', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('Column1 bar chart')).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Change Chart Type' }).click();
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Scatter' })
+
+    await expect(mito.getByText('Column1 scatter plot')).toBeVisible();
+    await expect(mito.locator('.plotly-graph-div')).toHaveScreenshot('scatter-plot.png');
+  });
+
+  test('Scatter plot from selection', async ({ page }) => {
+    const mito = await getMitoFrameWithTestCSV(page);
+    
+    await mito.getByTitle('Column1').click();
+    await mito.getByTitle('Column2').click({ modifiers: ['Shift']});
+    
+    await clickTab(page, mito, 'Insert');
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Create an interactive scatter plot.' })
+
+    await expect(mito.locator('p.select-text').getByText('Column1')).toBeVisible();
+    await expect(mito.locator('p.select-text').getByText('Column2')).toBeVisible();
+  })
+
+  test('Update Graph Title', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('Column1 bar chart')).toBeVisible();
+
+    await mito.getByText('Column1 bar chart').dblclick();
+
+    await expect(mito.locator('.popup-input')).toBeVisible();
+    await mito.locator('.popup-input').fill('My Graph Title');
+    await mito.locator('.popup-input').press('Enter');
+
+    await awaitResponse(page);
+    await expect(mito.getByText('My Graph Title')).toBeVisible();
+  });
+
+  test('Update X axis Title on double click', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('Column1 bar chart')).toBeVisible();
+
+    await mito.locator('.g-xtitle', { hasText: 'count' }).dblclick();
+
+    await expect(mito.locator('.popup-input')).toBeVisible();
+    await mito.locator('.popup-input').fill('X axis Title');
+    await mito.locator('.popup-input').press('Enter');
+
+    await awaitResponse(page);
+    await expect(mito.locator('.g-xtitle', { hasText: 'X axis Title' })).toBeVisible();
+  });
+
+  test('Update Y axis Title with double click', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('Column1 bar chart')).toBeVisible();
+
+    await mito.locator('.g-ytitle', { hasText: 'Column1' }).dblclick();
+
+    await expect(mito.locator('.popup-input')).toBeVisible();
+    await mito.locator('.popup-input').fill('Y axis Title');
+    await mito.locator('.popup-input').press('Enter');
+
+    await awaitResponse(page);
+    await expect(mito.locator('.g-ytitle', { hasText: 'Y axis Title' })).toBeVisible();
+  });
+
+  test('Update X axis title through toolbar', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.locator('.g-xtitle', { hasText: 'count' })).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Add Chart Element' }).click();
+    await mito.getByRole('button', { name: 'Axis Titles' }).hover();
+    await mito.getByRole('button', { name: 'Edit X Axis Title' }).click();
+    await awaitResponse(page);
+
+    await expect(mito.locator('.popup-input')).toBeVisible();
+    await mito.locator('.popup-input').fill('X axis Title');
+    await mito.locator('.popup-input').press('Enter');
+
+    await awaitResponse(page);
+    await expect(mito.locator('.g-xtitle', { hasText: 'X axis Title' })).toBeVisible();
+  });
+
+  test('Update Y axis title through toolbar', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.locator('.g-ytitle', { hasText: 'Column1' })).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Add Chart Element' }).click();
+    await mito.getByRole('button', { name: 'Axis Titles' }).hover();
+    await mito.getByRole('button', { name: 'Edit Y Axis Title' }).click();
+    await awaitResponse(page);
+
+    await expect(mito.locator('.popup-input')).toBeVisible();
+    await mito.locator('.popup-input').fill('Y axis Title');
+    await mito.locator('.popup-input').press('Enter');
+
+    await awaitResponse(page);
+    await expect(mito.locator('.g-ytitle', { hasText: 'Y axis Title' })).toBeVisible();
+  });
+
+  test('Hide X axis title', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('count')).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Add Chart Element' }).click();
+    await mito.getByRole('button', { name: 'Axis Titles' }).hover();
+    await mito.getByRole('button', { name: 'Horizontal' }).click();
+    await awaitResponse(page);
+
+    await expect(mito.getByText('count')).toBeHidden();
+  });
+
+  test('Hide Y axis title', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.locator('.g-ytitle', { hasText: 'Column1' })).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Add Chart Element' }).click();
+    await mito.getByRole('button', { name: 'Axis Titles' }).hover();
+    await mito.getByRole('button', { name: 'Vertical' }).click();
+    await awaitResponse(page);
+
+    await expect(mito.locator('.g-ytitle', { hasText: 'Column1' })).toBeHidden();
+  });
+
+  test('Hide graph title', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.locator('.g-gtitle', { hasText: 'Column1 bar chart' })).toBeVisible();
+
+    await mito.getByRole('button', { name: '▾ Add Chart Element' }).click();
+    await mito.getByRole('button', { name: 'Chart Title' }).hover();
+    await mito.getByRole('button', { name: 'Display Title' }).click();
+    await awaitResponse(page);
+
+    await expect(mito.locator('.g-gtitle', { hasText: 'Column1 bar chart' })).toBeHidden();
+  });
+
+  test('Escape key closes graph title input', async ({ page }) => {
+    const mito = await getMitoFrameWithTypeCSV(page);
+
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Graph' })
+    await expect(mito.getByText('Column1 bar chart')).toBeVisible();
+
+    await mito.getByText('count').dblclick();
+
+    await expect(mito.locator('.popup-input')).toBeVisible();
+    await mito.locator('.popup-input').fill('Y axis Title');
+    await mito.locator('.popup-input').press('Escape');
+
+    await awaitResponse(page);
+    await expect(mito.getByText('count')).toBeVisible();
   });
 
   test('AI Not Exist on Enterprise', async ({ page }) => {
@@ -358,7 +614,7 @@ test.describe('Insert Tab Buttons', () => {
 
     await clickButtonAndAwaitResponse(page, mito, { name: 'Graph', exact: true });
 
-    await expect(mito.getByText('Setup Graph')).toBeVisible();
+    await expect(mito.locator('#mito-center-content-container').getByText('Select Data')).toBeVisible();
     // We test graph functionality elsewhere, so we skip here
   });
 
@@ -367,9 +623,11 @@ test.describe('Insert Tab Buttons', () => {
     await clickTab(page, mito, 'Insert');
 
     await clickButtonAndAwaitResponse(page, mito, { name: 'Create an interactive scatter plot.' });
+    await expect(mito.locator('#mito-center-content-container').getByText('Select Data')).toBeVisible();
 
-    await expect(mito.getByText('Setup Graph')).toBeVisible();
-    await expect(mito.getByText('Scatter')).toBeVisible();
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Change Chart Type' });
+    // Check that there are 2 icons under the "checked" div in the chart type dropdown
+    await expect(mito.locator('.mito-dropdown-item-icon-and-title-container', { hasText: 'Scatter' }).locator('svg')).toHaveCount(2);
   });
 
   test('Test Graph (line)', async ({ page }) => {
@@ -377,10 +635,11 @@ test.describe('Insert Tab Buttons', () => {
     await clickTab(page, mito, 'Insert');
 
     await clickButtonAndAwaitResponse(page, mito, { name: 'Create an interactive line graph.' });
+    await expect(mito.locator('#mito-center-content-container').getByText('Select Data')).toBeVisible();
 
-    await expect(mito.getByText('Setup Graph')).toBeVisible();
-    await expect(mito.getByText('line', {exact: true})).toBeVisible();
-
+    await clickButtonAndAwaitResponse(page, mito, { name: 'Change Chart Type' });
+    // Check that there are 2 icons under the "checked" div in the chart type dropdown
+    await expect(mito.locator('.mito-dropdown-item-icon-and-title-container', { hasText: 'Line' }).locator('svg')).toHaveCount(2);
   });
 
 })
@@ -704,7 +963,7 @@ test.describe('Keyboard Shortcuts', () => {
     const mito = await getMitoFrameWithTestCSV(page);
     await page.keyboard.press('Alt+F1');
     await awaitResponse(page);
-    await expect(mito.getByText('Setup Graph')).toBeVisible();
+    await expect(mito.locator('#mito-center-content-container').getByText('Select Data')).toBeVisible();
   })
 
   test('Open File Import', async ({ page, browserName}) => {
